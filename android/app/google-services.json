@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "1010230800659",
+    "project_id": "vipulclothing",
+    "storage_bucket": "vipulclothing.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1010230800659:android:4beb93351ceb62d8136ae6",
+        "android_client_info": {
+          "package_name": "com.duesapp"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAEl632uCAEn4sRbnpcEEM0Ke51LqstWMU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
