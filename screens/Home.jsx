@@ -1,23 +1,45 @@
 import { useNavigation } from '@react-navigation/native';
-import React from 'react';
+import React, { useState } from 'react';
 import { View, Text, StyleSheet, Pressable, ScrollView, Dimensions } from 'react-native';
 import { Avatar, Button, Card, } from 'react-native-paper';
 import LinearGradient from "react-native-linear-gradient";
 import Icon from 'react-native-vector-icons/MaterialIcons';
+import { useSelector } from 'react-redux';
+import { useDispatch } from 'react-redux';
+import { changeTheme } from '../redux/theme/themeReducer';
+
+import { useColorScheme } from 'react-native';
+
+
 const gap = 2;
 const padding = 10;
 
 const screenWidth = Dimensions.get("window").width-(gap + padding*2); // 10 is the gap and padding on both sides
 
 const Home = () => {
+  const dispath= useDispatch();
   const navigation = useNavigation();
+  const colorSchme = useColorScheme();
+  const isDark= colorSchme ==="dark"
+  if(isDark) dispath(changeTheme("dark"))
+  console.log("color shcme is ",colorSchme);
+
+  
+
+  const colors = {
+  background: isDark ? "#121212" : "#ffffff",
+  card: isDark ? "#1e1e1e" : "#ffffff",
+  text: isDark ? "#ffffff" : "#000000",
+  buttonBorder: isDark ? "#4caf50" : "green"
+};
+
 
   const handlePress = () => {
     navigation.navigate("Users")
     
   }
   return (
-    <ScrollView>
+    <ScrollView style={{backgroundColor:colors.background}}>
        <View style={styles.Buttonscontainer}>
 
           <Pressable style={styles.button} onPress={handlePress}>

@@ -12,6 +12,8 @@ import AddUser from "./screens/AddUser";
 import { NavigationContainer } from '@react-navigation/native';
 import AddDue from './screens/ProfileScreen/AddDue';
 import DueDetail from './screens/ProfileScreen/DueDetail';
+import { Provider } from 'react-redux';
+import store from "./redux/store"
 // import { MaterialIcons} from '@react-native-vector-icons/material-design-icons';
 
   const Stack = createNativeStackNavigator();
@@ -43,7 +45,10 @@ export class App extends Component {
     return (
     <SafeAreaProvider>
       <NavigationContainer>
+      <Provider store={store}>
+        
         <RootStack/>
+      </Provider>
       </NavigationContainer>
 
     </SafeAreaProvider>

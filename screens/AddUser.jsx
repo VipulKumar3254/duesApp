@@ -1,3 +1,4 @@
+import { useSelector } from 'react-redux';
 import React from 'react';
 import { View,Vibration, Text, StyleSheet, ScrollView, Alert, Pressable } from 'react-native';
 import { TextInput } from 'react-native-paper';
@@ -10,6 +11,10 @@ import { Animated } from "react-native";
 const AddUser = () => {
     const [userData, setUserData] = useState({});
     const scale = useRef(new Animated.Value(1)).current;
+    const theme= useSelector((state)=>state.theme.theme)
+    console.log(theme);
+    
+    
 
 
 
