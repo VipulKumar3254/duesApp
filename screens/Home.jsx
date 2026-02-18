@@ -21,7 +21,11 @@ const Home = () => {
   const navigation = useNavigation();
   const colorSchme = useColorScheme();
   const isDark= colorSchme ==="dark"
-  if(isDark) dispath(changeTheme("dark"))
+  if(isDark) 
+    {
+      console.log("object")
+      dispath(changeTheme(true))
+    }
   console.log("color shcme is ",colorSchme);
 
   

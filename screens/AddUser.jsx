@@ -5,14 +5,14 @@ import { TextInput } from 'react-native-paper';
 import Icons from 'react-native-vector-icons/MaterialIcons';
 import { useState, useEffect, useRef } from 'react';
 import { useCameraDevice, Camera, useCameraPermission } from 'react-native-vision-camera';
+import useTheme from "../hooks/useTheme"
 import firestore from '@react-native-firebase/firestore';
 import { Animated } from "react-native";
 
 const AddUser = () => {
     const [userData, setUserData] = useState({});
     const scale = useRef(new Animated.Value(1)).current;
-    const theme= useSelector((state)=>state.theme.theme)
-    console.log(theme);
+    const color = useTheme();
     
     
 
@@ -82,7 +82,7 @@ const AddUser = () => {
 
     if (device == null) return "loading";
     return (
-        <ScrollView>
+        <ScrollView style={{backgroundColor:color.background}}>
             {/* <Camera
       ref={camera}
     //   {...cameraProps}
