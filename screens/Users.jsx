@@ -1,40 +1,19 @@
+import { PageBody } from '../source/layout/Layout';
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, ScrollView, FlatList, Image, Pressable } from 'react-native';
 import { Searchbar } from 'react-native-paper';
 import firestore from '@react-native-firebase/firestore';
 import { useNavigation } from '@react-navigation/native';
+import useTheme from '../hooks/useTheme';
 const duesCollection = firestore().collection('dues');
 
 
-const data = [{
-  id: 1,
-  name: "John Doe",
-  profile: require("../assets/vipul.jpeg"),
-  dues: 200
-},
-{
-  id: 2,
-  name: "Jane Doe",
-  profile: require("../assets/vipul.jpeg"),
-  dues: 300
-}, {
-  id: 3,
-  name: "John Doe",
-  profile: require("../assets/vipul.jpeg"),
-  dues: 200
-},
-{
-  id: 4,
-  name: "Jane Doe",
-  profile: require("../assets/vipul.jpeg"),
-  dues: 300
-}
 
-]
 const Users = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [userData, setUserData] = useState([]);
   const navigation = useNavigation()
+  const color = useTheme();
 
   const filterUser= ()=>{
     console.log(searchQuery)
@@ -66,12 +45,15 @@ const Users = () => {
       )
     })
     setUserData(realdata)
+    console.log(realdata)
 
   }
   useEffect(() => {
     fetchData();
   }, [])
   return (
+    <PageBody>
+
     <View style={styles.container}>
 
       {/* <View style={styles.searchBar}> */}
@@ -83,20 +65,21 @@ const Users = () => {
       {/* </View> */}
       <FlatList
         data={userData}
+        
         keyExtractor={(item) => item.id}
         renderItem={({ item }) => (
           <View style={styles.mainContainer}>
             <Pressable onPress={()=>navigation.navigate("Profile",{userId:item.id})}>
 
 
-              <View style={{ backgroundColor: "white", padding: 10, borderRadius: 10, flexDirection: "row", alignItems: "center", shadowColor: "#000000", }}>
+              <View style={{ backgroundColor:color.background,borderColor:color.borderColor,elevation:1, borderWidth:.3, padding: 10, borderRadius: 20, flexDirection: "row", alignItems: "center",  }}>
 
-                <Image style={{ height: 80, width: 80, borderRadius: 60 }} source={{ uri: item.profile }} />
+                <Image style={{ height: 60, width: 60, borderRadius: 60 }} source={{ uri: item.profile }} />
 
                 <View style={{ alignSelf: 'center', padding: 6 }}>
 
-                  <Text style={styles.title}>{item.name}</Text>
-                  <Text style={styles.dues}>Dues: {item.dues}</Text>
+                  {/* <Text style={[{color:color.text},styles.title]}>name</Text> */}
+                  <Text style={[{color:color.text},styles.title]}>{item.name}</Text>
                 </View>
               </View>
             </Pressable>
@@ -105,6 +88,7 @@ const Users = () => {
       />
 
     </View>
+</PageBody>
   );
 };
 
@@ -112,19 +96,18 @@ const styles = StyleSheet.create({
   mainContainer: {
     padding: 5,
   },
-
+  
   container: {
     flex: 1
   },
   title: {
-    fontSize: 22,
+    fontSize: 32,
     fontWeight: "semibold",
-    fontVariant: "small-caps"
+    fontVariant: "small-caps",
+    marginStart:6
+
   },
-  dues: {
-    fontSize: 18,
-    color: "red",
-  }
+
 });
 
 export default Users;

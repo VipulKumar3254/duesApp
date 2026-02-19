@@ -6,7 +6,7 @@ export class Dues extends Component {
     return (
       <ScrollView>
         <View>
-          <Image style={styles.userImg} source={require("../assets/vipul.jpeg")}/>
+          {/* <Image style={styles.userImg} source={require("../assets/vipul.jpeg")}/> */}
         </View>
       <View style= {styles.actionCard}>
 

@@ -8,6 +8,7 @@ import { useCameraDevice, Camera, useCameraPermission } from 'react-native-visio
 import useTheme from "../hooks/useTheme"
 import firestore from '@react-native-firebase/firestore';
 import { Animated } from "react-native";
+import ThemedInput from "../source/common/atom/ThemedInput";
 
 const AddUser = () => {
     const [userData, setUserData] = useState({});
@@ -98,15 +99,18 @@ const AddUser = () => {
                 </Pressable>
             </View>
             <View style={styles.container}>
-                <TextInput style={styles.inputBox}
-                    underlineColor='transparent'
-                    label="Name"
-                    value={userData.name}
+                <ThemedInput style={styles.inputBox}
+                    theme={color}
+                     placeholder="Name"
+      keyboardType="numeric"
+                    value={userData.name} 
                     onChangeText={text => setUserData({ ...userData, name: text })}
                 />
-                <TextInput style={styles.inputBox}
+                <ThemedInput style={styles.inputBox}
                     focusLineColor='transparent'
                     label="Phone"
+                    theme={color}
+                    placeholder="Phone"
                     underlineColor='transparent'
                     value={userData.phone}
                     onChangeText={text => setUserData({ ...userData, phone: text })}
@@ -117,8 +121,10 @@ const AddUser = () => {
 
                 // onChangeText={text => setText(text)}
                 />
-                <TextInput style={[styles.inputBox, styles.addressInput]}
+                <ThemedInput style={[styles.inputBox, styles.addressInput]}
                     label="Address"
+                    placeholder="Address"
+                    theme={color}
                     value={userData.address}
                     onChangeText={text => setUserData({ ...userData, address: text })}
                     textContentType='addressCity'
@@ -137,10 +143,11 @@ const AddUser = () => {
                         onPressIn={handlePressIn}
                         
                         onPressOut={handlePressOut}
-                        style={{ backgroundColor: 'green', alignItems: 'center', borderRadius: 10, }}
+                        style={{ backgroundColor:color.background,  borderWidth: 1,
+        borderColor: "#999", elevation:1, alignItems: 'center', borderRadius: 10, }}
                         onPress={() => {   Vibration.vibrate(1000); // 200ms vibration
                         handleSubmit(userData) }}>
-                        <Text style={[{ fontSize: 20, fontWeight: 'medium', padding: 10, },]}>Add User</Text>
+                        <Text style={[{ color:color.text,fontSize: 20, fontWeight: 'medium', padding: 10, },]}>Add User</Text>
                     </Pressable>
                 </View>
             </View>
@@ -167,15 +174,16 @@ const styles = StyleSheet.create({
         marginBottom: 10,
         borderWidth: 1,
         borderColor: "#999",
+
         borderRadius: 18,
         borderTopRightRadius: 18,
         borderTopLeftRadius: 18,
         focusLineColor: 'transparent',
-        backgroundColor: "#fff",
-        shadowColor: "#000000",
-        shadowOffset: { width: 0, height: 10 },
-        shadowOpacity: 1,
-        elevation: 10
+        // backgroundColor: "#fff",
+        // shadowColor: "#000000",
+        // shadowOffset: { width: 0, height: 10 },
+        // shadowOpacity: 1,
+        elevation: 1
     },
     iconWrapper1: {
         // backgroundColor:"pink",

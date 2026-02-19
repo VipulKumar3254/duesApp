@@ -7,8 +7,10 @@ import Icon from "react-native-vector-icons/MaterialIcons"
 import firestore from '@react-native-firebase/firestore';
 import storage from '@react-native-firebase/storage';
 import { Camera, useCameraDevice } from 'react-native-vision-camera';
+import useTheme from '../../hooks/useTheme';
 
 const AddDue = ({route}) => {
+    const color = useTheme();
     const userId= route.params.userId
 
 
@@ -152,8 +154,8 @@ const AddDue = ({route}) => {
                         onChangeText={text => setDueData({ ...dueData, description: text })} />
                     <View style={{ flexDirection: "row" }}>
 
-                        <Pressable style={[styles.addDueButton, { flex: 1 }]} onPress={() => setOpen(true)}>
-                            <Text style={{ fontSize: 20 }}>  {dueData.dueDate ? dueData.dueDate : "Due Date"}</Text>
+                        <Pressable style={[styles.addDueButton, { flex: 1, backgroundColor:color.background }]} onPress={() => setOpen(true)}>
+                            <Text style={{ fontSize: 17 }}>  {dueData.dueDate ? dueData.dueDate : "Due Date"}</Text>
 
                         </Pressable>
                     </View>
@@ -171,8 +173,8 @@ const AddDue = ({route}) => {
                             setOpen(false)
                         }}
                     />
-                    <Pressable onPress={addDue} style={[styles.addDueButton, { width: "100%" }]}>
-                        <Text style={{ textAlign: "center", height: 30, fontSize: 23, fontWeight: "semibold" }} >ADD</Text>
+                    <Pressable onPress={addDue} style={[styles.addDueButton, { width: "100%" , backgroundColor:color.background}]}>
+                        <Text style={{ textAlign: "center", height: 30, fontSize: 23,fontWeight: "semibold" }} >ADD</Text>
                     </Pressable>
                 </View>
             </View>
@@ -251,8 +253,9 @@ const styles = StyleSheet.create({
         shadowColor: "#000000",
         shadowOffset: { width: 0, height: 10 },
         shadowOpacity: 1,
-        elevation: 10
-
+        elevation: 1,
+        padding:10,
+        fontSize:17
     }, overlay: {
         width: "100%",
         borderWidth: 1,
@@ -264,7 +267,6 @@ const styles = StyleSheet.create({
     },
     addDueButton: {
         padding: 10,
-        backgroundColor: "green",
         width: 80,
         borderRadius: 30,
     },

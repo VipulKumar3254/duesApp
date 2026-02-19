@@ -1,5 +1,7 @@
+import { PageBody } from '../source/layout/Layout';
+import { Modal, Portal, Text, Button, PaperProvider } from 'react-native-paper';
 import React, { useEffect, useState, useRef } from 'react'
-import { Image, ScrollView, Text, View, Pressable, Alert, FlatList } from 'react-native'
+import { Image, ScrollView, View, Pressable, Alert, FlatList } from 'react-native'
 import { StyleSheet } from 'react-native'
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
@@ -12,10 +14,16 @@ import BouncyCheckbox from "react-native-bouncy-checkbox";
 import AddDueScreen from "./ProfileScreen/AddDue"
 import { useNavigation } from '@react-navigation/native';
 import DueDetail from './ProfileScreen/DueDetail';
+import useTheme from '../hooks/useTheme';
 
 
 
 const Profile = ({ route }) => {
+  const [totalCredits, setTotalCredits] = useState(null);
+  const [totalDues, setTotalDues] = useState(null);
+  const [totalPayable, setTotalPayable] = useState(null);
+  const [displayCard, setDisplayCard] = useState("transactions")
+  const color = useTheme();
   const userId = route.params.userId;
   const navigation = useNavigation();
   const [dueData, setDueData] = useState({
@@ -27,6 +35,12 @@ const Profile = ({ route }) => {
 
 
   });
+  //for rn paper modal
+  const [visible, setVisible] = React.useState(false);
+  const showModal = () => setVisible(true);
+  const hideModal = () => setVisible(false);
+  const containerStyle = {  backgroundColor: color.background, padding: 20, marginHorizontal: 20, borderRadius: 12, gap: 6 };
+
   const [showForm, setShowForm] = useState(false);
   const [user, setUser] = useState({});
   const [duesData, setDuesData] = useState([]);
@@ -113,6 +127,36 @@ const Profile = ({ route }) => {
 
     checkPermission();
   }, []);
+  const fetchCredits = async () => {
+    const duesCollection = await firestore()
+      .collection('duesUsers')
+      .doc(userId)
+      .collection('credits')
+      .get();
+
+    const duesData1 = duesCollection.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data()
+    }));
+
+    let totalCredits = duesData1.reduce((total, item) => {
+      const amount = Number(item.amount);
+
+      if (!isNaN(amount)) {
+        return total + amount;
+      }
+
+      return total;
+
+
+    }, 0);
+
+    console.log("toal credits are", totalCredits)
+
+    setTotalCredits(totalCredits)
+
+
+  }
 
   const fetchDues = async () => {
 
@@ -128,10 +172,30 @@ const Profile = ({ route }) => {
     }));
     console.log(duesData1)
     setDuesData(duesData1)
+
+    let totalDues = duesData1.reduce((total, item) => {
+      const amount = Number(item.amount);
+
+      if (!isNaN(amount)) {
+        return total + amount;
+      }
+
+      return total;
+
+
+    }, 0);
+
+    console.log("toal dues are", totalDues)
+    setTotalDues(totalDues)
   }
   useEffect(() => {
     fetchDues();
+    fetchCredits();
   }, [])
+  useEffect(()=>{
+    const system = totalDues-totalCredits
+    setTotalPayable(system)
+  },[totalCredits,totalDues])
 
 
   const requestCameraPermission = async () => {
@@ -157,186 +221,171 @@ const Profile = ({ route }) => {
       return false;
     }
   };
+
   return (
-    <View style={{ flex: 1 }}>
+    <PageBody>
+
+      <View style={{ flex: 1 }}>
 
 
-      <ScrollView style={styles.mainContainer} contentContainerStyle={{ flexGrow: 1 }}>
 
-        <View>
 
-          {user.profile && <Image style={{ height: 200, width: "100%" }} source={{ uri: user.profile }} />}
+        <ScrollView style={styles.mainContainer} contentContainerStyle={{ flexGrow: 1 }}>
 
-        </View>
+          <View>
 
-        <View style={[styles.iconContainer, { borderWidth: 1 }]}>
-          <Icon name="call" size={30} color="black" />
-          <Icon name="message" size={30} color="black" />
-          <FontAwesome name="whatsapp" size={30} color="black" />
-        </View>
-        {/* <View style={{gap:10}}>
-          {duesData.length > 0 ? duesData.map((item) => {
-            return (
-              <Pressable style={{}} onPress={()=>navigation.navigate("DueDetail",{DueDetail:item})}>
+            {user.profile && <Image style={{ height: 200, width: "100%" }} source={{ uri: user.profile }} />}
 
-              <View style={{backgroundColor:"#dada", gap:10}}>
+          </View>
 
-                <View style={styles.dueCard}>
+          <View style={[styles.iconContainer, { margin: 15, elevation: 1, backgroundColor: color.background }]}>
+            <Icon name="call" size={30} color={color.text} />
+            <Icon name="message" size={30} color={color.text} />
+            <FontAwesome name="whatsapp" size={30} color={color.text} />
+          </View>
 
-                  <Text>{item.amount}</Text>
-                  <Text>{item.dueDate}</Text>
-                </View>
-               
+          <View style={{ flexDirection: "row" }}>
 
+            <Pressable onPress={() => setDisplayCard("transactions")}>
+              <Text style={[styles.buttonsContainer, { borderColor: color.borderColor }]}>Transactions</Text>
+            </Pressable>
+
+            <Pressable onPress={() => setDisplayCard("overview")}>
+              <Text style={[styles.buttonsContainer, { borderColor: color.borderColor }]}>Overview</Text>
+            </Pressable>
+
+          </View>
+          {displayCard == "transactions" ?
+
+            <FlatList
+              data={duesData}
+
+              keyExtractor={(item) => item.id}
+              contentContainerStyle={{ padding: 15 }}
+              ItemSeparatorComponent={() => <View style={{ height: 15 }} />}
+              renderItem={({ item }) => (
+                <Pressable
+
+                  onPress={() =>
+                    navigation.navigate("DueDetail", { DueDetail: item })
+                  }
+                >
+                  <View style={[{ backgroundColor: color.background, borderColor: color.borderColor, borderWidth: .3 }, styles.dueCardText]}>
+                    <View style={{ flexDirection: 'row', gap: 4 }}>
+                      <Text style={{ fontWeight: "700", fontSize: 15 }}>
+                        Amount:
+                      </Text>
+                      <Text>
+                        {item.amount}
+                      </Text>
+                    </View>
+                    <View style={{ flexDirection: 'row', gap: 4 }}>
+                      <Text style={{ fontWeight: "700", fontSize: 15 }}>
+                        Due Date:
+                      </Text>
+                      <Text>
+                        {item.dueDate}
+                      </Text>
+                    </View>
+                  </View>
+                </Pressable>
+              )}
+            />
+            :
+            <View style={[{borderColor:color.borderColor, backgroundColor:color.background},styles.overview]}>
+              <View>
+                <Text style={[{},styles.payable]}>Total Payable</Text>
+                <Text style={[{},styles.count]}>{totalPayable}</Text>
               </View>
-                    </Pressable>
-            )
-          }) :
-            <View style={{ justifyContent: "center", alignItems: "center", marginTop: 10 }}>
-              <Text style={{ fontSize: 20 }}>No Dues </Text>
+              
             </View>
-
           }
-        </View> */}
-        <FlatList
-          data={duesData} 
-         
-          keyExtractor={(item) => item.id}
-          contentContainerStyle={{ padding: 15  }}
-          ItemSeparatorComponent={() => <View style={{ height: 15 }} />}
-          renderItem={({ item }) => (
+
+
+          <View style={styles.bottomIcons}>
+            <Pressable style={({ pressed }) => [
+              styles.addDueButton,
+              pressed && styles.pressed
+            ]}
+              // onPress={() => setShowForm(true)}
+              // onPress={() => navigation.navigate("AddDue", { userId })}
+              onPress={() => showModal()}
+            >
+
+
+              <Icon style={{ textAlign: "center" }} name="add" size={30} color="black" />
+            </Pressable>
+            {/* <Pressable style={styles.addDueButton} onPress={()=>{addDue()}}>
+
+<Icon style={{textAlign:"center"}} name="remove" size={30} color="black"/>
+</Pressable> */}
+
+          </View>
+        </ScrollView>
+
+        {
+          showForm && <AddDueScreen />
+        }
+
+
+
+
+
+
+
+
+        <Portal >
+          <Modal visible={visible} onDismiss={hideModal} contentContainerStyle={containerStyle}
+            style={{ backgroundColor: "rgba(0,0,0,0.5)" }}>
             <Pressable
-            
-              onPress={() =>
-                navigation.navigate("DueDetail", { DueDetail: item })
+              onPress={() => { hideModal(); navigation.navigate("AddDue", { userId: userId }); }}
+              style={
+                ({ pressed }) => (
+                  {
+                    backgroundColor: color.background,
+                    borderColor:color.borderColor,
+                    borderWidth:.3,
+                    padding: 10,
+                    elevation: 1,
+                    borderRadius: 12,
+                    height: 50,
+                    opacity: pressed ? 0.6 : 1
+
+                  }
+                )
               }
             >
-              <View style={styles.dueCardText}>
-                <Text>Amount: {item.amount}</Text>
-                <Text>Due Date: {item.dueDate}</Text>
-              </View>
-            </Pressable>
-          )}
-        />
+              <Text style={[{ fontSize: 20, textAlign: "center", color: color.text },]}>Add Due</Text>
+            </Pressable >
+            <Pressable style={
+              ({ pressed }) => (
+                {
+                  backgroundColor: color.background,
+                      borderColor:color.borderColor,
+                    borderWidth:.3,
+                  padding: 10,
+                  elevation: 1,
+                  borderRadius: 12,
+                  height: 50,
+                  opacity: pressed ? 0.6 : 1
 
-        <View style={styles.bottomIcons}>
-          <Pressable style={styles.addDueButton}
-            // onPress={() => setShowForm(true)}
-            onPress={() => navigation.navigate("AddDue", { userId })}
-          >
-
-
-            <Icon style={{ textAlign: "center" }} name="add" size={30} color="black" />
-          </Pressable>
-          {/* <Pressable style={styles.addDueButton} onPress={()=>{addDue()}}>
-
-          <Icon style={{textAlign:"center"}} name="remove" size={30} color="black"/>
-        </Pressable> */}
-
-        </View>
-      </ScrollView>
-
-      {
-        showForm && <AddDueScreen />
-      }
-      {/* {
-        showForm && (
-          <Pressable
-            style={styles.overlay}
-            onPress={() => setShowForm(false)}  // Outside click
-          >
-            <Pressable
-              style={{ height: "100%", width: "100%" }}
-              onPress={(e) => e.stopPropagation()} // Prevent close when clicking inside form
-            >
-              <View style={{ height: "100%", width: "100%" }}>
-
-                {capturedPhoto ? (
-                  <Image
-                    source={{ uri: capturedPhoto }}
-                    style={{
-                      height: 300,
-                      width: "100%",
-                      borderRadius: 15,
-                      alignSelf: "center",
-                      marginBottom: 10
-                    }}
-                  />
-                ) :
-
-
-
-                  <View style={{ height: 200, width: "100%", borderWidth: 1, alignItems: 'center', justifyContent: "center", backgroundColor: "rgba(50, 50, 50, 0.67)" }}>
-
-                    <Pressable onPress={() => { setShowForm(false); setCameraWindow(true) }} style={{}}>
-                      <Text>
-                        <Icon name="camera-alt" size={200} color="black" />
-                      </Text>
-                    </Pressable>
-                  </View>
                 }
-
-                <View style={styles.floatingInputContainer}>
-                  <TextInput underlineColor='transparent' style={styles.textInput} keyboardType='numeric' placeholder='Amount' name="amount" value={dueData.amount}
-                    onChangeText={(text) => setDueData({ ...dueData, amount: text })} />
-                  <TextInput underlineColor='transparent' style={styles.textInput} keyboardType='text' placeholder='Decription' name="description"
-                    value={dueData.description}
-                    onChangeText={text => setDueData({ ...dueData, description: text })} />
-                  <View style={{ flexDirection: "row" }}>
-
-                    <Pressable style={[styles.addDueButton, { flex: 1 }]} onPress={() => setOpen(true)}>
-                      <Text style={{ fontSize: 20 }}>  {dueData.dueDate ? dueData.dueDate : "Due Date"}</Text>
-
-                    </Pressable>
-                  </View>
-                  <DatePicker
-                    modal
-                    mode='date'
-                    open={open}
-                    date={new Date()}
-                    onConfirm={(date) => {
-                      setOpen(false)
-                      setDueData({ ...dueData, dueDate: date.toDateString() })
-                      console.log(dueData)
-                    }}
-                    onCancel={() => {
-                      setOpen(false)
-                    }}
-                  />
-                  <Pressable onPress={addDue} style={[styles.addDueButton, { width: "100%" }]}>
-                    <Text style={{ textAlign: "center", height: 30, fontSize: 23, fontWeight: "semibold" }} >ADD</Text>
-                  </Pressable>
-                </View>
-              </View>
-
+              )
+            }
+              onPress={() => { navigation.navigate("AddCredit", { userId: userId }); hideModal() }}
+            >
+              <Text style={{ fontSize: 20, textAlign: "center", color: color.text }}>Add Credit</Text>
             </Pressable>
-          </Pressable>
+            {/* <Text>Example Modal.  Click outside this area to dismiss.</Text> */}
+          </Modal>
+        </Portal>
 
-        )
-      }
 
-      {cameraWindow &&
-        <View>
-          {device && <Camera
-            ref={camera}
-            photo={true}
-            device={device}
-            style={{ height: "90%", width: "100%" }}
-            isActive={true}
-            preview={true}
-          />
 
-          }
-          <View style={{ justifyContent: "center", alignContent: "center", width: "100%" }}>
-            <Pressable onPress={() => takePhoto()}>
+      </View>
+    </PageBody>
 
-              <Icon style={{ transform: [{ translateY: -100 }], textAlign: "center" }} name="camera" size={60} color="red" />
-            </Pressable>
-          </View>
-        </View>
-      } */}
 
-    </View>
 
 
   )
@@ -345,7 +394,6 @@ const Profile = ({ route }) => {
 const styles = StyleSheet.create({
   mainContainer: {
     flex: 1,
-    borderWidth: 1,
     marginBottom: 34,
 
   },
@@ -360,7 +408,6 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     padding: 5,
     gap: 30,
-    backgroundColor: "rgba(189, 182, 189, 0.67)",
     borderRadius: 10,
     justifyContent: 'center'
   },
@@ -378,9 +425,13 @@ const styles = StyleSheet.create({
   },
   addDueButton: {
     padding: 10,
-    backgroundColor: "green",
+    backgroundColor: "white",
+    elevation: 6,
     width: 80,
     borderRadius: 30,
+  },
+  pressed: {
+    opacity: 0.7
   },
   floatingInputContainer: {
     // backgroundColor: "white",
@@ -420,13 +471,40 @@ const styles = StyleSheet.create({
     zIndex: 100,
   },
   dueCard: {
-   borderRadius:10
+    borderRadius: 10
   },
-  dueCardText:{
-    borderRadius:20,
-    backgroundColor:"green",
-    padding:10,
+  dueCardText: {
+    // height:80,
+    borderRadius: 20,
+    padding: 10,
+    paddingVertical: 16,
+    elevation: 1
 
+  },
+  buttonsContainer: {
+    gap: 9,
+    padding: 10,
+    borderWidth: .3,
+    marginHorizontal: 10,
+    borderRadius: 20
+  },
+  overview:{
+    margin:10,
+    marginTop:15,
+    marginStart:8,
+    padding:16,
+    borderWidth:.3,
+    elevation:1,
+    gap:5,
+    borderRadius:20
+
+  },
+  payable:{
+    fontWeight:"bold",
+    fontSize:16
+  },
+  count:{
+    fontSize:50
   }
 
 
