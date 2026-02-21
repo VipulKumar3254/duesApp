@@ -1,5 +1,7 @@
+import ImagePicker from "react-native-image-crop-picker";
+
 import React, { useEffect, useState, useRef } from 'react';
-import { Alert, TextInput } from 'react-native';
+import { Alert, TextInput, Linking } from 'react-native';
 import { Image, Pressable } from 'react-native';
 import { View, Text, StyleSheet, ScrollView } from 'react-native';
 import DatePicker from 'react-native-date-picker';
@@ -8,61 +10,68 @@ import firestore from '@react-native-firebase/firestore';
 import storage from '@react-native-firebase/storage';
 import { Camera, useCameraDevice } from 'react-native-vision-camera';
 import useTheme from '../../hooks/useTheme';
+import { PageBody } from '../../source/layout/Layout';
+import { ActivityIndicator,MD2Colors } from "react-native-paper";
 
-const AddDue = ({route}) => {
+const AddDue = ({ route }) => {
     const color = useTheme();
-    const userId= route.params.userId
+    const [ShowActivityIndicator, setShowActivityIndicator] = useState(false);
+    const {userId ,user}= route.params;
+
 
 
     const [capturedPhoto, setCapturedPhoto] = useState(null);
     const [open, setOpen] = useState(false);
     const [duesData, setDuesData] = useState([]);
-  const [dueData, setDueData] = useState({
-  amount: "",
-  description: "",
-  dueDate: ""
-});
-
-    const [cameraWindow, setCameraWindow] = useState(false)
-    const device = useCameraDevice('back')
-
-    const camera = useRef(null)
-
-    const cameraWindowRef = useRef(null)
-
-     const takePhoto = async () => {
-    const photo = await camera.current.takePhoto()
-    console.log(photo)
-    const imagePath = `file://${photo.path}`;
-
-    setCapturedPhoto(imagePath);
-    setCameraWindow(false)
-    setShowForm(true)
+    const [dueData, setDueData] = useState({
+        amount: "",
+        description: "",
+        dueDate: ""
+    });
 
 
-  }
-  const uploadImage = async (imageUri) => {
-    try {
-      const fileName = `dues/${Date.now()}.jpg`; // unique name
-      const reference = storage().ref(fileName);
+    const takePhoto = () => {
 
-      // remove "file://"
-      const uploadUri = imageUri.replace('file://', '');
 
-      await reference.putFile(uploadUri);
+        ImagePicker.openCamera({
+            width: 300,
+            height: 400,
+            cropping: true,
+        }).then((image) => {
+            setCapturedPhoto(image)
 
-      const downloadURL = await reference.getDownloadURL();
-
-      return downloadURL;
-
-    } catch (error) {
-      console.log("Upload Error:", error);
-      return null;
+        });
     }
-  };
+    
+    const uploadImage = async () => {
+        try {
+            const fileName = `duesUsers/dues/${userId}/${Date.now()}.jpg`;
+
+            const reference = storage().ref(fileName);
+
+
+            await reference.putFile(capturedPhoto.path);
+
+            const downloadURL = await reference.getDownloadURL();
+
+            return downloadURL;
+
+        } catch (error) {
+            console.log("Upload Error:", error);
+            return null;
+        }
+    };
+
 
 
     const addDue = async () => {
+            setShowActivityIndicator(true)
+
+        if (!dueData.amount || !dueData.description || !dueData.dueDate || !capturedPhoto) {
+            Alert.alert("Please fill all the fields.")
+            setShowActivityIndicator(false)
+            return;
+        }
         try {
             let imageUrl = null;
 
@@ -73,150 +82,111 @@ const AddDue = ({route}) => {
             await firestore().collection(`duesUsers/${userId}/dues`).add({
                 ...dueData,
                 photo: imageUrl,
+                userProfile:user.profile,
+                createdAt: firestore.FieldValue.serverTimestamp(),
+
+            });
+            await firestore().collection(`globalDues`).add({
+                ...dueData,
+                photo: imageUrl,
+                uid:userId,
+                userProfile:user.profile,
                 createdAt: firestore.FieldValue.serverTimestamp(),
             });
-
+            setShowActivityIndicator(false)
             Alert.alert("Success", "Due Added Successfully");
 
         } catch (error) {
             console.log("Firestore Error:", error);
+            setShowActivityIndicator(false)
+            Alert.alert("Error while adding due, Try again.")
         }
     };
-    useEffect(() => {
-        const checkPermission = async () => {
-            await requestCameraPermission();
-        };
 
-        checkPermission();
-    }, []);
-
-
-    const requestCameraPermission = async () => {
-        try {
-            const permission = await Camera.getCameraPermissionStatus();
-
-            if (permission === "authorized") {
-                return true;
-            }
-
-            const newPermission = await Camera.requestCameraPermission();
-
-            if (newPermission === "authorized") {
-                return true;
-            } else {
-                // Alert.alert("Permission Required", "Camera permission is needed");
-                return false;
-            }
-
-        } catch (error) {
-            console.log("Permission Error:", error);
-            Alert.alert("Error", "Something went wrong while requesting permission");
-            return false;
-        }
-    };
 
     return (
-        <View>
+        <PageBody>
+
+            <View>
 
 
-            <View style={{ height: "100%", width: "100%" }}>
+                <View style={{ height: "100%", width: "100%" }}>
 
-                {capturedPhoto ? (
-                    <Image
-                        source={{ uri: capturedPhoto }}
-                        style={{
-                            height: 300,
-                            width: "100%",
-                            borderRadius: 15,
-                            alignSelf: "center",
-                            marginBottom: 10
-                        }}
-                    />
-                ) :
+                    {capturedPhoto ? (
+                        <Image
+                            source={{ uri: capturedPhoto.path }}
+                            style={{
+                                height: 300,
+                                width: "100%",
+                                borderRadius: 15,
+                                alignSelf: "center",
+                                marginBottom: 10
+                            }}
+                        />
+                    ) :
 
 
 
-                    <View style={{ height: 200, width: "100%", borderWidth: 1, alignItems: 'center', justifyContent: "center", backgroundColor: "rgba(50, 50, 50, 0.67)" }}>
+                        <View style={{ height: 200, width: "100%", borderWidth: 1, alignItems: 'center', justifyContent: "center", backgroundColor: "rgba(50, 50, 50, 0.67)" }}>
 
-                        <Pressable onPress={() => { setCameraWindow(true) }} style={{}}>
-                            <Text>
-                                <Icon name="camera-alt" size={200} color="black" />
-                            </Text>
+                            <Pressable onPress={() => { takePhoto() }} style={{}}>
+                                <Text>
+                                    <Icon name="camera-alt" size={200} color="black" />
+                                </Text>
+                            </Pressable>
+                        </View>
+                    }
+
+                    <View style={[styles.floatingInputContainer, { backgroundColor: color.background }]}>
+                        <TextInput underlineColor='transparent' style={[styles.textInput, { backgroundColor: color.background, borderColor: color.borderColor, color: color.text }]} keyboardType='numeric' placeholder='Amount' name="amount" value={dueData.amount}
+                            onChangeText={(text) => setDueData({ ...dueData, amount: text })} />
+                        <TextInput underlineColor='transparent' style={[styles.textInput, { backgroundColor: color.background, borderColor: color.borderColor, color: color.text }]} keyboardType='text' placeholder='Decription' name="description"
+                            value={dueData.description}
+                            onChangeText={text => setDueData({ ...dueData, description: text })} />
+                        <View style={{ flexDirection: "row", backgroundColor: color.background }}>
+
+                            <Pressable style={[styles.addDueButton, { flex: 1, borderColor: color.borderColor, backgroundColor: color.background }]} onPress={() => setOpen(true)}>
+                                <Text style={{ fontSize: 17, color: color.text }}>  {dueData.dueDate ? dueData.dueDate : "Due Date"}</Text>
+
+                            </Pressable>
+                        </View>
+                        <DatePicker
+                            modal
+                            mode='date'
+                            open={open}
+                            date={new Date()}
+                            style={{ borderColor: color.borderColor, borderWidth: .3 }}
+                            onConfirm={(date) => {
+                                setOpen(false)
+                                setDueData({ ...dueData, dueDate: date.toDateString() })
+                                console.log(dueData)
+                            }}
+                            onCancel={() => {
+                                setOpen(false)
+                            }}
+                        />
+                        <Pressable onPress={addDue} style={[styles.addDueButton, { borderColor: color.borderColor, width: "100%", backgroundColor: color.background }]}>
+                            <Text style={{ color: color.text, textAlign: "center", height: 30, fontSize: 23, fontWeight: "semibold" }} >ADD</Text>
                         </Pressable>
                     </View>
-                }
-
-                <View style={styles.floatingInputContainer}>
-                    <TextInput underlineColor='transparent' style={styles.textInput} keyboardType='numeric' placeholder='Amount' name="amount" value={dueData.amount}
-                        onChangeText={(text) => setDueData({ ...dueData, amount: text })} />
-                    <TextInput underlineColor='transparent' style={styles.textInput} keyboardType='text' placeholder='Decription' name="description"
-                        value={dueData.description}
-                        onChangeText={text => setDueData({ ...dueData, description: text })} />
-                    <View style={{ flexDirection: "row" }}>
-
-                        <Pressable style={[styles.addDueButton, { flex: 1, backgroundColor:color.background }]} onPress={() => setOpen(true)}>
-                            <Text style={{ fontSize: 17 }}>  {dueData.dueDate ? dueData.dueDate : "Due Date"}</Text>
-
-                        </Pressable>
-                    </View>
-                    <DatePicker
-                        modal
-                        mode='date'
-                        open={open}
-                        date={new Date()}
-                        onConfirm={(date) => {
-                            setOpen(false)
-                            setDueData({ ...dueData, dueDate: date.toDateString() })
-                            console.log(dueData)
-                        }}
-                        onCancel={() => {
-                            setOpen(false)
-                        }}
-                    />
-                    <Pressable onPress={addDue} style={[styles.addDueButton, { width: "100%" , backgroundColor:color.background}]}>
-                        <Text style={{ textAlign: "center", height: 30, fontSize: 23,fontWeight: "semibold" }} >ADD</Text>
-                    </Pressable>
                 </View>
+
+
+
             </View>
 
-            {cameraWindow &&
-                <View style={{ position: "absolute", height: "100%", width: "100%" }}>
-                    <Pressable
-                        onPress={() => setCameraWindow(false)}
-                        style={{
-                            position: "absolute",
-                            top: 30,
-                            right: 20,
-                            zIndex: 1000,
-                            backgroundColor: "rgba(190, 188, 190, 0.67)",
-                            borderRadius: 20
-                        }}
-                    >
-                        <Icon name="close" size={40} color="red" />
-                    </Pressable>
-                    {device && <Camera
-                        ref={camera}
-                        photo={true}
-                        device={device}
-                        style={{ height: "100%", width: "100%" }}
-                        isActive={true}
-                        preview={true}
-                    />
-
-                    }
-                    <View style={{ justifyContent: "center", alignContent: "center", width: "100%" }}>
-                        <Pressable onPress={() => takePhoto()}>
-
-                            <Icon style={{ transform: [{ translateY: -100 }], textAlign: "center" }} name="camera" size={60} color="red" />
-                        </Pressable>
-
+                 {
+                ShowActivityIndicator && (
+                    <View style={styles.overlay}>
+                        <ActivityIndicator
+                            size="large"
+                            animating={true}
+                            color={MD2Colors.grey500}
+                        />
                     </View>
-                </View>
+                )
             }
-
-
-
-        </View>
+        </PageBody>
     );
 };
 
@@ -227,19 +197,9 @@ const styles = StyleSheet.create({
         alignItems: 'center',
     },
     floatingInputContainer: {
-        // backgroundColor: "white",
         padding: 10,
-        // position: "absol ute",
-        // top: "50%",
-        // left: "50%",
-        // transform: [
-        //   { translateX: -150 }, // half width
-        //   { translateY: -175 }   // half height
-        // ],
         width: "100%",
-        // height: 150,
         borderRadius: 10,
-        // padding: 5,
         gap: 10
 
     },
@@ -254,8 +214,9 @@ const styles = StyleSheet.create({
         shadowOffset: { width: 0, height: 10 },
         shadowOpacity: 1,
         elevation: 1,
-        padding:10,
-        fontSize:17
+        padding: 10,
+        fontSize: 17,
+        borderWidth: .3,
     }, overlay: {
         width: "100%",
         borderWidth: 1,
@@ -269,6 +230,7 @@ const styles = StyleSheet.create({
         padding: 10,
         width: 80,
         borderRadius: 30,
+        borderWidth: .3
     },
 });
 

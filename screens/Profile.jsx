@@ -1,7 +1,8 @@
-import { PageBody } from '../source/layout/Layout';
+import functions from '@react-native-firebase/functions';
+  import { PageBody } from '../source/layout/Layout';
 import { Modal, Portal, Text, Button, PaperProvider } from 'react-native-paper';
 import React, { useEffect, useState, useRef } from 'react'
-import { Image, ScrollView, View, Pressable, Alert, FlatList } from 'react-native'
+import { Image, ScrollView, View, Pressable, Alert, FlatList, Linking } from 'react-native'
 import { StyleSheet } from 'react-native'
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
@@ -39,7 +40,7 @@ const Profile = ({ route }) => {
   const [visible, setVisible] = React.useState(false);
   const showModal = () => setVisible(true);
   const hideModal = () => setVisible(false);
-  const containerStyle = {  backgroundColor: color.background, padding: 20, marginHorizontal: 20, borderRadius: 12, gap: 6 };
+  const containerStyle = { backgroundColor: color.background, padding: 20, marginHorizontal: 20, borderRadius: 12, gap: 6 };
 
   const [showForm, setShowForm] = useState(false);
   const [user, setUser] = useState({});
@@ -103,9 +104,39 @@ const Profile = ({ route }) => {
     }
   };
 
+  const openWhatsApp = () => {
+    const phoneNumber = "+91" + user.phone; // country code + number (no + sign)
+    const message = "Hello bro 👋";
+
+    const url = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(message)}`;
+
+    Linking.openURL(url)
+      .catch(() => {
+        Alert.alert("Make sure WhatsApp is installed");
+      });
+  };
 
 
+  const openMessages = () => {
+    const phoneNumber = user.phone;
+    const message = "Your due amount is pending.";
 
+    const separator = Platform.OS === 'ios' ? '&' : '?';
+
+    const url = `sms:${phoneNumber}${separator}body=${encodeURIComponent(message)}`;
+
+    Linking.openURL(url).catch((err) => Alert.alert("unable to open Message app"))
+  };
+
+
+  const openPhone = () => {
+    const phoneNumber = user.phone;
+
+    Linking.openURL(`tel:${phoneNumber}`)
+      .catch(() => {
+        Alert.alert("Unable to open dialer");
+      });
+  };
   const fetchUserDetails = async () => {
     const userDocument = await firestore().collection('duesUsers').doc(userId).get();
     if (userDocument.exists) {
@@ -120,13 +151,7 @@ const Profile = ({ route }) => {
   useEffect(() => {
     fetchUserDetails();
   }, [])
-  useEffect(() => {
-    const checkPermission = async () => {
-      await requestCameraPermission();
-    };
 
-    checkPermission();
-  }, []);
   const fetchCredits = async () => {
     const duesCollection = await firestore()
       .collection('duesUsers')
@@ -171,7 +196,7 @@ const Profile = ({ route }) => {
       ...doc.data()
     }));
     console.log(duesData1)
-    setDuesData(duesData1)
+    // setDuesData(duesData1)
 
     let totalDues = duesData1.reduce((total, item) => {
       const amount = Number(item.amount);
@@ -188,39 +213,40 @@ const Profile = ({ route }) => {
     console.log("toal dues are", totalDues)
     setTotalDues(totalDues)
   }
+  const fetchUsersDetails = async () => {
+    console.log("gu kha")
+
+      // functions().useEmulator('172.20.10.2', 5001);
+    const usersDueDetails = functions().httpsCallable('usersDueDetails');
+
+    let result = await usersDueDetails({ uid: userId });
+
+   result.data.sort((a, b) =>
+  b.createdAt._seconds - a.createdAt._seconds
+);
+    console.log("combined result is ",result.data);
+
+    setDuesData(result.data)
+
+
+  }
+
+  useEffect(() => {
+
+    fetchUsersDetails();
+
+
+
+  }, [])
   useEffect(() => {
     fetchDues();
     fetchCredits();
   }, [])
-  useEffect(()=>{
-    const system = totalDues-totalCredits
+  useEffect(() => {
+    const system = totalDues - totalCredits
     setTotalPayable(system)
-  },[totalCredits,totalDues])
+  }, [totalCredits, totalDues])
 
-
-  const requestCameraPermission = async () => {
-    try {
-      const permission = await Camera.getCameraPermissionStatus();
-
-      if (permission === "authorized") {
-        return true;
-      }
-
-      const newPermission = await Camera.requestCameraPermission();
-
-      if (newPermission === "authorized") {
-        return true;
-      } else {
-        // Alert.alert("Permission Required", "Camera permission is needed");
-        return false;
-      }
-
-    } catch (error) {
-      console.log("Permission Error:", error);
-      Alert.alert("Error", "Something went wrong while requesting permission");
-      return false;
-    }
-  };
 
   return (
     <PageBody>
@@ -230,28 +256,37 @@ const Profile = ({ route }) => {
 
 
 
-        <ScrollView style={styles.mainContainer} contentContainerStyle={{ flexGrow: 1 }}>
+        <View style={styles.mainContainer} contentContainerStyle={{ flexGrow: 1 }}>
 
           <View>
 
-            {user.profile && <Image style={{ height: 200, width: "100%" }} source={{ uri: user.profile }} />}
+            {user.profile && <Image style={{ height:250, width: "100%", objectFit: "cover" }} source={{ uri: user.profile }} />}
 
           </View>
 
           <View style={[styles.iconContainer, { margin: 15, elevation: 1, backgroundColor: color.background }]}>
-            <Icon name="call" size={30} color={color.text} />
-            <Icon name="message" size={30} color={color.text} />
-            <FontAwesome name="whatsapp" size={30} color={color.text} />
+            <Pressable onPress={() => openPhone()}>
+
+              <Icon name="call" size={30} color={"green"} />
+            </Pressable>
+            <Pressable onPress={() => openMessages()}>
+
+              <Icon name="message" size={30} color={"green"} />
+            </Pressable>
+            <Pressable onPress={() => openWhatsApp()}>
+
+              <FontAwesome name="whatsapp" size={30} color={"green"} />
+            </Pressable>
           </View>
 
           <View style={{ flexDirection: "row" }}>
 
-            <Pressable onPress={() => setDisplayCard("transactions")}>
-              <Text style={[styles.buttonsContainer, { borderColor: color.borderColor }]}>Transactions</Text>
+            <Pressable style={[styles.buttonsContainer, { backgroundColor: displayCard == "transactions" ? "#7c7d7c" : color.background , borderColor:color.borderColor}]} onPress={() => setDisplayCard("transactions")}>
+              <Text style={[{ borderColor: color.borderColor }]}>Transactions</Text>
             </Pressable>
 
-            <Pressable onPress={() => setDisplayCard("overview")}>
-              <Text style={[styles.buttonsContainer, { borderColor: color.borderColor }]}>Overview</Text>
+            <Pressable style={[styles.buttonsContainer, { backgroundColor: displayCard == "overview" ? "#7c7d7c" : color.background, borderColor:color.borderColor }]} onPress={() => setDisplayCard("overview")}>
+              <Text style={[{ borderColor: color.borderColor }]}>Overview</Text>
             </Pressable>
 
           </View>
@@ -270,7 +305,7 @@ const Profile = ({ route }) => {
                     navigation.navigate("DueDetail", { DueDetail: item })
                   }
                 >
-                  <View style={[{ backgroundColor: color.background, borderColor: color.borderColor, borderWidth: .3 }, styles.dueCardText]}>
+                  <View style={[{ backgroundColor: item.type=="credit"?color.creditColor:color.dueColor, borderColor: color.borderColor, borderWidth: .3 }, styles.dueCardText]}>
                     <View style={{ flexDirection: 'row', gap: 4 }}>
                       <Text style={{ fontWeight: "700", fontSize: 15 }}>
                         Amount:
@@ -281,23 +316,42 @@ const Profile = ({ route }) => {
                     </View>
                     <View style={{ flexDirection: 'row', gap: 4 }}>
                       <Text style={{ fontWeight: "700", fontSize: 15 }}>
-                        Due Date:
+                        {item.type=="due"? "Due":""} Date:
                       </Text>
                       <Text>
-                        {item.dueDate}
+                        {item.type=="credit"?item.date:item.dueDate}
                       </Text>
                     </View>
+
                   </View>
                 </Pressable>
               )}
             />
             :
-            <View style={[{borderColor:color.borderColor, backgroundColor:color.background},styles.overview]}>
-              <View>
-                <Text style={[{},styles.payable]}>Total Payable</Text>
-                <Text style={[{},styles.count]}>{totalPayable}</Text>
+            <View style={{ alignItems: "center", gap: 10,marginTop:10  , marginBottom:10 }}>
+
+              <View style={[{ borderColor: color.borderColor, backgroundColor: color.dueColor }, styles.overview]}>
+                <View>
+                  <Text style={[{color:color.text}, styles.payable]}>Total Payable</Text>
+                  <Text style={[{color:color.text}, styles.count]}>{totalPayable}</Text>
+                </View>
+
               </View>
-              
+              <View style={[{ borderColor: color.borderColor, backgroundColor: color.dueColor }, styles.overview]}>
+                <View>
+                  <Text style={[{color:color.text}, styles.payable]}>Total Dues</Text>
+                  <Text style={[{color:color.text}, styles.count]}>{totalDues}</Text>
+                </View>
+
+              </View>
+              <View style={[{ borderColor: color.borderColor, backgroundColor: color.creditColor }, styles.overview]}>
+                <View>
+                  <Text style={[{color:color.text}, styles.payable]}>Total Credits</Text>
+                  <Text style={[{color:color.text}, styles.count]}>{totalCredits}</Text>
+                </View>
+
+              </View>
+
             </View>
           }
 
@@ -321,7 +375,7 @@ const Profile = ({ route }) => {
 </Pressable> */}
 
           </View>
-        </ScrollView>
+        </View>
 
         {
           showForm && <AddDueScreen />
@@ -338,13 +392,13 @@ const Profile = ({ route }) => {
           <Modal visible={visible} onDismiss={hideModal} contentContainerStyle={containerStyle}
             style={{ backgroundColor: "rgba(0,0,0,0.5)" }}>
             <Pressable
-              onPress={() => { hideModal(); navigation.navigate("AddDue", { userId: userId }); }}
+              onPress={() => { hideModal(); navigation.navigate("AddDue", { user: user , userId:userId}); }}
               style={
                 ({ pressed }) => (
                   {
                     backgroundColor: color.background,
-                    borderColor:color.borderColor,
-                    borderWidth:.3,
+                    borderColor: color.borderColor,
+                    borderWidth: .3,
                     padding: 10,
                     elevation: 1,
                     borderRadius: 12,
@@ -361,8 +415,8 @@ const Profile = ({ route }) => {
               ({ pressed }) => (
                 {
                   backgroundColor: color.background,
-                      borderColor:color.borderColor,
-                    borderWidth:.3,
+                  borderColor: color.borderColor,
+                  borderWidth: .3,
                   padding: 10,
                   elevation: 1,
                   borderRadius: 12,
@@ -412,7 +466,8 @@ const styles = StyleSheet.create({
     justifyContent: 'center'
   },
   bottomIcons: {
-    position: "absolute",
+    // position: "absolute",
+    marginTop:10,
     bottom: 20,
     left: 0,
     right: 0,
@@ -424,6 +479,7 @@ const styles = StyleSheet.create({
     marginHorizontal: 50
   },
   addDueButton: {
+    // marginTop:10,
     padding: 10,
     backgroundColor: "white",
     elevation: 6,
@@ -478,7 +534,7 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     padding: 10,
     paddingVertical: 16,
-    elevation: 1
+    // elevation: 1
 
   },
   buttonsContainer: {
@@ -488,23 +544,23 @@ const styles = StyleSheet.create({
     marginHorizontal: 10,
     borderRadius: 20
   },
-  overview:{
-    margin:10,
-    marginTop:15,
-    marginStart:8,
-    padding:16,
+  overview: {
+    width: "95%",
+
+    padding: 16,
+    borderWidth: .3,
+    // elevation: .3,
     borderWidth:.3,
-    elevation:1,
-    gap:5,
-    borderRadius:20
+
+    borderRadius: 20
 
   },
-  payable:{
-    fontWeight:"bold",
-    fontSize:16
+  payable: {
+    fontWeight: "bold",
+    fontSize: 16
   },
-  count:{
-    fontSize:50
+  count: {
+    fontSize: 50
   }
 
 

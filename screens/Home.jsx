@@ -1,6 +1,6 @@
 import { PageBody } from "../source/layout/Layout"
 import { useNavigation } from '@react-navigation/native';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, Pressable, ScrollView, Dimensions } from 'react-native';
 import { Avatar, Button, Card, } from 'react-native-paper';
 import LinearGradient from "react-native-linear-gradient";
@@ -8,10 +8,11 @@ import Icon from 'react-native-vector-icons/MaterialIcons';
 import { useSelector } from 'react-redux';
 import { changeTheme } from '../redux/theme/themeReducer';
 import useTheme from "../hooks/useTheme"
+import functions from "@react-native-firebase/functions";
 
 
 
-const gap = 2;
+const gap = 8;
 const padding = 10;
 
 const screenWidth = Dimensions.get("window").width - (gap + padding * 2); // 10 is the gap and padding on both sides
@@ -19,6 +20,7 @@ const screenWidth = Dimensions.get("window").width - (gap + padding * 2); // 10 
 const Home = () => {
 
   const navigation = useNavigation();
+  const [cardStats, setCardStats] = useState({});
 
   const color = useTheme();
 
@@ -32,6 +34,18 @@ const Home = () => {
     navigation.navigate("Users")
 
   }
+
+  const cardStat = async () => {
+
+    const cardStats = functions().httpsCallable("getTotalOutstanding");
+    const result = await cardStats();
+    setCardStats(result.data)
+  }
+  useEffect(() => {
+
+    cardStat();
+
+  }, [])
   return (
     <PageBody>
 
@@ -41,9 +55,9 @@ const Home = () => {
           <Pressable style={styles.button} onPress={handlePress}>
             <Text style={styles.mainButton}>Users</Text>
           </Pressable>
-          <Pressable style={styles.button} onPress={() => navigation.navigate("Notices")}>
+          {/* <Pressable style={styles.button} onPress={() => navigation.navigate("Notices")}>
             <Text style={styles.mainButton}>Notices</Text>
-          </Pressable>
+          </Pressable> */}
           <Pressable style={styles.button} onPress={() => navigation.navigate("AddUser")}>
             <Text style={styles.mainButton}>Add User</Text>
           </Pressable>
@@ -51,63 +65,57 @@ const Home = () => {
 
         <View style={styles.MainContainer}>
           <View style={{ marginTop: 5, padding: 5 }}>
-            <View
-              style={[{ backgroundColor: color.background, borderColor:color.borderColor, elevation:1 }, styles.fullScreenCard,]}
+            <Pressable onPress={() => navigation.navigate("TotalOutStandingAmount")}
+              style={[{ backgroundColor: color.background, borderColor: color.borderColor, elevation: 1 }, styles.fullScreenCard,]}
             >
               <Text variant="titleLarge" style={[{ color: color.text }, styles.title]}>Outstanding Amount</Text>
-              <Text variant="bodyMedium" style={[styles.count, { fontSize: 50, lineHeight: 70, color: color.text }]}>20000</Text>
+              <Text variant="bodyMedium" style={[styles.count, { fontSize: 50, lineHeight: 70, color: color.text }]}>{cardStats.totalOutstanding}</Text>
               {/* <View style={styles.searchButton}>
 
 <Icon name="search" size={30} color="black" />;
 </View> */}
 
-            </View>
+            </Pressable>
           </View>
-          <View style={{ padding: 5 }}>
+          <Pressable onPress={() => navigation.navigate("TotalOverDueAmount")} style={{ padding: 5 }}>
             <View
-              style={[{ backgroundColor: color.background, borderColor:color.borderColor }, styles.fullScreenCard,]}
+              style={[{ backgroundColor: color.background, borderColor: color.borderColor }, styles.fullScreenCard,]}
 
             >
               <Text variant="titleLarge" style={[{ color: color.text }, styles.title]}>OverDue Amount</Text>
-              <Text variant="bodyMedium" style={[styles.count, { fontSize: 50, lineHeight:70, color: color.text }]}>16478</Text>
+              <Text variant="bodyMedium" style={[styles.count, { fontSize: 50, lineHeight: 70, color: color.text }]}>{cardStats.totalOverDueAmount}</Text>
               {/* <View style={styles.searchButton}>
 
 <Icon name="search" size={30} color="black" />;
 </View> */}
 
             </View>
-          </View>
+          </Pressable>
 
           <View style={styles.GradientCardContainer}>
-            <Pressable onPress={() => navigation.navigate("Users")}>
+            <Pressable style={{flex:1}} onPress={() => navigation.navigate("Users")}>
 
               <View
-                style={[{ backgroundColor: color.background , borderColor:color.borderColor}, styles.fullScreenCard,]}
+                style={[{ backgroundColor: color.background, borderColor: color.borderColor }, styles.fullScreenCard,]}
 
               >
                 <Text variant="titleLarge" style={[{ color: color.text }, styles.title]}>Total Users</Text>
-                <Text variant="bodyMedium" style={[styles.count, { lineHeight: 70, color: color.text }]}>30</Text>
-                <View style={styles.searchButton}>
+                <Text variant="bodyMedium" style={[styles.count, { lineHeight: 70, color: color.text }]}>{cardStats.totalUsers}</Text>
+                {/* <View style={styles.searchButton}>
                   <Pressable onPress={() => navigation.navigate("SearchUser")}>
 
                     <Icon name="search" size={30} color="black" />
                   </Pressable>
-                </View>
+                </View> */}
 
               </View>
             </Pressable>
 
             <View
-           
-                            style={[{ backgroundColor: color.background , borderColor:color.borderColor}, styles.fullScreenCard,]}
-
+              style={[{ backgroundColor: color.background, borderColor: color.borderColor }, styles.fullScreenCard,]}
             >
               <Text variant="titleLarge" style={[{ color: color.text }, styles.title]}>Month Collection</Text>
-              <Text variant="bodyMedium" style={[styles.count, {  color: color.text }]}>26</Text>
-              {/* <View style={styles.searchButton}>
-
-<Icon name="search" size={30} color="black" />;
-            </View> */}
+              <Text variant="bodyMedium" style={[styles.count, { color: color.text }]}>26</Text>
 
             </View>
           </View>
@@ -189,23 +197,17 @@ const styles = StyleSheet.create({
   },
 
   fullScreenCard: {
-    width: "100%",
-    // height: 100,
+    flex:1,
     padding: 10,
-    elevation: 10,
+    elevation: 2,
     borderRadius: 10,
-    borderWidth:.3
+    borderWidth: .3
   },
   gradientCard: {
     width: screenWidth / 2,
-
-    borderRadius: 10,
-    padding: 10, // VERY IMPORTANT (internal spacing)
-    minHeight: 120, // gives proper height
-    elevation: 15,
-    shadowColor: "#000",
-    shadowOpacity: 1,
-    shadowRadius: 5,
+    padding: 10, 
+       minHeight: 120, 
+    elevation: 2,
 
   },
 
@@ -214,8 +216,8 @@ const styles = StyleSheet.create({
 
   count: {
     fontWeight: "400",
-    fontSize:50,
-    lineHeight:70
+    fontSize: 50,
+    lineHeight: 70
   },
 
 

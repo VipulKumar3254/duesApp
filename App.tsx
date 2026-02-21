@@ -10,6 +10,8 @@ import Users from "./screens/Users";
 import Notices from "./screens/Notices";
 import SearchUser from "./screens/SearchUser";
 import AddUser from "./screens/AddUser";
+import TotalOutStandingAmount from "./screens/cardScreens/TotalOutStandingAmount";
+import TotalOverDueAmount from "./screens/cardScreens/TotalOverDueAmount";
 import { NavigationContainer } from '@react-navigation/native';
 import AddDue from './screens/ProfileScreen/AddDue';
 import DueDetail from './screens/ProfileScreen/DueDetail';
@@ -121,6 +123,23 @@ import store from "./redux/store"
       backgroundColor: color.background, // white background
     },
       }} component={AddCredit} />
+      <Stack.Screen name="TotalOutStandingAmount"  options={{
+        title:"Total Outstanding Amount",
+          headerTintColor:color.text,
+         headerStyle: {
+      
+      backgroundColor: color.background, // white background
+    },
+      }} component={TotalOutStandingAmount} />
+      
+      <Stack.Screen name="TotalOverDueAmount"  options={{
+        title:"Total Overdue Amount",
+          headerTintColor:color.text,
+         headerStyle: {
+      
+      backgroundColor: color.background, // white background
+    },
+      }} component={TotalOverDueAmount} />
       
     </Stack.Navigator>
   );

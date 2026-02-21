@@ -1,11 +1,14 @@
 import React from "react";
 import { Image, StyleSheet, View, Text, ScrollView } from "react-native";
+import { PageBody } from "../../source/layout/Layout";
+import useTheme from "../../hooks/useTheme";
 
 const DueDetail = ({ route }) => {
+  const color = useTheme();
 
   const detail = route?.params?.DueDetail;
 
-  console.log("Detail:", route.params.DueDetail.id);
+  console.log("Detail:", route.params.detail);
 
   // Agar detail hi nahi mila
   if (!detail) {
@@ -17,7 +20,7 @@ const DueDetail = ({ route }) => {
   }
 
   return (
-    <ScrollView style={styles.container}>
+    <PageBody  scrollable style={[styles.container,{}]}>
       
       {detail.photo && (
         <Image
@@ -27,25 +30,25 @@ const DueDetail = ({ route }) => {
         />
       )}
 
-      <View style={styles.content}>
-        <Text style={styles.label}>Amount:</Text>
-        <Text style={styles.value}>{detail.amount}</Text>
+      <View style={styles.content(color)}>
+        <Text style={[styles.label,{color:color.text}]}>Amount:</Text>
+        <Text style={[styles.value,{color:color.text}]}>{detail.amount}</Text>
 
-        <Text style={styles.label}>Description:</Text>
-        <Text style={styles.value}>{detail.description}</Text>
+        <Text style={[styles.label,{color:color.text}]}>Description:</Text>
+        <Text style={[styles.value,{color:color.text}]}>{detail.description}</Text>
 
-        <Text style={styles.label}>Due Date:</Text>
-        <Text style={styles.value}>{detail.dueDate}</Text>
+        <Text style={[styles.label,{color:color.text}]}>Due Date:</Text>
+        <Text style={[styles.value,{color:color.text}]}>{detail.dueDate}</Text>
       </View>
 
-    </ScrollView>
+    </PageBody>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#fff",
+    padding:10
   },
   centerContainer: {
     flex: 1,
@@ -60,9 +63,14 @@ const styles = StyleSheet.create({
     width: "100%",
     height: 250,
   },
-  content: {
+  content: (color)=>[{
     padding: 20,
-  },
+    margin:10,
+    borderWidth:.3,
+    borderColor:color.text,
+    borderRadius:20
+    
+  }],
   label: {
     fontSize: 18,
     fontWeight: "bold",

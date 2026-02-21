@@ -45,7 +45,7 @@ const AddCredit = ({ route }) => {
     const AddCreditToFirebase = async () => {
         setShowActivityIndicator(true)
         try {
-            if (!creditData.amount || !creditData.description || !creditData.date) {
+            if (!creditData.amount || !creditData.description || !creditData.date|| !capturedPhoto) {
                 setShowActivityIndicator(false);
                 Alert.alert("Please fill all fields");
                 return;
@@ -55,7 +55,7 @@ const AddCredit = ({ route }) => {
 
             // ✅ Upload Image if available
             if (capturedPhoto) {
-                const fileName = `credits/${userId}/${Date.now()}.jpg`;
+                const fileName = `duesUsers/credits/${userId}/${Date.now()}.jpg`;
 
                 const reference = storage().ref(fileName);
 
@@ -194,7 +194,7 @@ const AddCredit = ({ route }) => {
                         <ActivityIndicator
                             size="large"
                             animating={true}
-                            color={MD2Colors.red800}
+                            color={MD2Colors.grey500}
                         />
                     </View>
                 )
@@ -260,7 +260,7 @@ const styles = StyleSheet.create({
         backgroundColor: "rgba(255,255,255,0.2)"
     },
     overlay: {
-        ...StyleSheet.absoluteFillObject,
+        ...StyleSheet.absoluteFill,
         backgroundColor: "rgba(0,0,0,0.4)",
         justifyContent: "center",
         alignItems: "center",

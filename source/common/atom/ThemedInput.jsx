@@ -16,7 +16,7 @@ const ThemedInput = ({
         style={[
           styles.input,
           {
-            backgroundColor: theme.background,
+            backgroundColor: theme?.background,
             color: theme?.card,
             borderColor: theme?.card || '#ccc',
           },

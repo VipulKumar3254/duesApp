@@ -21,7 +21,7 @@ exports.addDue = onCall(async (request) => {
   //   throw new HttpsError("unauthenticated", "User must be logged in.");
   // }
 
-  const { dueData, photo ,uid} = request.data;
+  const { dueData, photo, uid } = request.data;
 
   if (!dueData) {
     throw new HttpsError("invalid-argument", "Due data is required.");
@@ -80,7 +80,7 @@ exports.getTotalOutstanding = onCall(async (request) => {
     });
 
     //total overdue calculation
-     const snapshot1 = await db
+    const snapshot1 = await db
       .collection("globalDues")
       .get();
 
@@ -90,10 +90,11 @@ exports.getTotalOutstanding = onCall(async (request) => {
     snapshot1.forEach(doc => {
       const data = doc.data();
       const amount = Number(data.amount || 0);
-     const dueDate = new Date(data.dueDate);
+      const dueDate = new Date(data.dueDate);
 
 
-      if (dueDate && dueDate < now) {
+      if (dueDate && dueDate <now) {
+        
         // Due date breached → add to overdue total
         totalOverdue += amount;
       }
@@ -101,12 +102,12 @@ exports.getTotalOutstanding = onCall(async (request) => {
 
     // getting total users
 
-const snapshot2 = await db
-  .collection("duesUsers")
-  .get();
+    const snapshot2 = await db
+      .collection("duesUsers")
+      .get();
 
-const totalDocs = snapshot2.size;
-console.log('totalDocs',snapshot2.size);
+    const totalDocs = snapshot2.size;
+    console.log('totalDocs', snapshot2.size);
 
 
 
@@ -117,8 +118,8 @@ console.log('totalDocs',snapshot2.size);
       success: true,
       totalOutstanding: total,
       totalOverDueAmount: totalOverdue,
-      totalUsers:totalDocs,
-      
+      totalUsers: totalDocs,
+
 
     };
 
@@ -170,4 +171,43 @@ exports.getTotalOverdue = onCall(async (request) => {
     console.error("Error calculating overdue:", error);
     throw new HttpsError("internal", error.message);
   }
+});
+
+
+exports.usersDueDetails = onCall(async (request) => {
+  const { uid } = request.data;
+
+  if (!uid) {
+    throw new HttpsError("invalid-argument", "uid is required");
+  }
+
+  // Fetch dues
+  const duesSnapshot = await db
+    .collection(`duesUsers/${uid}/dues`)
+    .get();
+
+  const duesData = duesSnapshot.docs.map((doc) => ({
+    id: doc.id,
+    type: "due",
+    ...doc.data(),
+  }));
+
+  // Fetch credits (assuming different collection)
+  const creditSnapshot = await db
+    .collection(`duesUsers/${uid}/credits`)
+    .get();
+
+  const creditData = creditSnapshot.docs.map((doc) => ({
+    id: doc.id,
+    type: "credit",
+    ...doc.data(),
+  }));
+
+  const combinedArray = [...duesData, ...creditData];
+
+  combinedArray.sort(
+    (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
+  );
+
+  return combinedArray;
 });
