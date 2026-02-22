@@ -10,7 +10,6 @@ import firestore from '@react-native-firebase/firestore';
 import storage from '@react-native-firebase/storage';
 import { TextInput } from 'react-native-paper';
 import DatePicker from 'react-native-date-picker'
-import { Camera, useCameraDevice } from 'react-native-vision-camera';
 import BouncyCheckbox from "react-native-bouncy-checkbox";
 import AddDueScreen from "./ProfileScreen/AddDue"
 import { useNavigation } from '@react-navigation/native';
@@ -51,7 +50,6 @@ const Profile = ({ route }) => {
   const [cameraWindow, setCameraWindow] = useState(false)
   const camera = useRef(null)
   const cameraWindowRef = useRef(null)
-  const device = useCameraDevice('back')
   const takePhoto = async () => {
     const photo = await camera.current.takePhoto()
     console.log(photo)

@@ -8,7 +8,6 @@ import DatePicker from 'react-native-date-picker';
 import Icon from "react-native-vector-icons/MaterialIcons"
 import firestore from '@react-native-firebase/firestore';
 import storage from '@react-native-firebase/storage';
-import { Camera, useCameraDevice } from 'react-native-vision-camera';
 import useTheme from '../../hooks/useTheme';
 import { PageBody } from '../../source/layout/Layout';
 import { ActivityIndicator,MD2Colors } from "react-native-paper";

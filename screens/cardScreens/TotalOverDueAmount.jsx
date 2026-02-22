@@ -105,7 +105,7 @@ const TotalOverDueAmount = () => {
 
           {loading &&
             <View style={[{backgroundColor:"rgba(0, 0, 0,.1)"},styles.activityOverlay]}>
-                <ActivityIndicator color={"grey800"} size="large"  />;
+                <ActivityIndicator color={"grey800"} size="large"  />
       
                 </View>
             }

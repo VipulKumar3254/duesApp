@@ -6,7 +6,6 @@ import { View, Vibration, Text, StyleSheet, ScrollView, Alert, Pressable } from 
 import { ActivityIndicator, TextInput, MD2Colors, overlay } from 'react-native-paper';
 import Icons from 'react-native-vector-icons/MaterialIcons';
 import { useState, useEffect, useRef } from 'react';
-import { useCameraDevice, Camera, useCameraPermission } from 'react-native-vision-camera';
 import useTheme from "../hooks/useTheme"
 import firestore from '@react-native-firebase/firestore';
 import { Animated } from "react-native";
