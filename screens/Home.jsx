@@ -9,6 +9,7 @@ import { useSelector } from 'react-redux';
 import { changeTheme } from '../redux/theme/themeReducer';
 import useTheme from "../hooks/useTheme"
 import functions from "@react-native-firebase/functions";
+import { getAuth, onAuthStateChanged } from "@react-native-firebase/auth";
 
 
 
@@ -24,6 +25,8 @@ const Home = () => {
 
   const color = useTheme();
 
+    const [initializing, setInitializing] = useState(true);
+    const [user, setUser] = useState();
 
 
 
@@ -46,6 +49,29 @@ const Home = () => {
     cardStat();
 
   }, [])
+
+
+  
+  
+    // Handle user state changes
+    function handleAuthStateChanged(user) {
+      setUser(user);
+      if (initializing) setInitializing(false);
+    }
+  
+    useEffect(() => {
+      const subscriber = onAuthStateChanged(getAuth(), handleAuthStateChanged);
+      return subscriber; // unsubscribe on unmount
+    }, []);
+  
+    if (initializing) return null;
+  
+    if (!user) {
+      console.log("no user")
+     navigation.replace("Login")
+    }
+
+
   return (
     <PageBody>
 
@@ -215,6 +241,7 @@ const styles = StyleSheet.create({
   },
 
   count: {
+    letterSpacing:-2,
     fontWeight: "400",
     fontSize: 50,
     lineHeight: 70

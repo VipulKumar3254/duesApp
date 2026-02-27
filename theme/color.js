@@ -5,7 +5,8 @@ export const lightTheme = {
   buttonBorder: "green",
   borderColor:"#00000000",
   dueColor:"rgba(245, 5, 5, 0.1)",
-  creditColor:"rgba(97, 245, 5, 0.1)"
+  creditColor:"rgba(97, 245, 5, 0.1)",
+  borderRadius:10,
 };
 
 export const darkTheme = {
@@ -15,6 +16,8 @@ export const darkTheme = {
   buttonBorder: "#6c6e6c",
   borderColor:"#8d8c8c",
     dueColor:"rgba(245, 5, 5, 0.1)",
-  creditColor:"rgba(97, 245, 5, 0.1)"
+  creditColor:"rgba(97, 245, 5, 0.1)",
+  borderRadius:10,
+
 
 };
