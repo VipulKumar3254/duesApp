@@ -57,7 +57,7 @@ const Users = () => {
     <View style={styles.container}>
 
       {/* <View style={styles.searchBar}> */}
-      <Searchbar placeholder="Search.."
+      <Searchbar style={{borderRadius:10,margin:5,backgroundColor:color.userSearchbackground, borderWidth:.1,}} placeholder="Search User"
         onChangeText={setSearchQuery}
         value={searchQuery}
       />
@@ -72,9 +72,9 @@ const Users = () => {
             <Pressable onPress={()=>navigation.navigate("Profile",{userId:item.id})}>
 
 
-              <View style={{ backgroundColor:color.background,borderColor:color.borderColor,elevation:1, borderWidth:.3, padding: 10, borderRadius: 20, flexDirection: "row", alignItems: "center",  }}>
+              <View style={{ backgroundColor:color.background,elevation:.1,borderColor:color.userBorderColor, borderWidth:.1, padding: 5, borderRadius: 10, flexDirection: "row", alignItems: "center",  }}>
 
-                <Image style={{ height: 60, width: 60, borderRadius: 60 }} source={{ uri: item.profile }} />
+                <Image style={{ height: 50, width: 50, borderRadius: 60 }} source={{ uri: item.profile }} />
 
                 <View style={{ alignSelf: 'center', padding: 6 }}>
 
@@ -94,14 +94,14 @@ const Users = () => {
 
 const styles = StyleSheet.create({
   mainContainer: {
-    padding: 5,
+    padding: 3,
   },
   
   container: {
     flex: 1
   },
   title: {
-    fontSize: 32,
+    fontSize: 20,
     fontWeight: "semibold",
     fontVariant: "small-caps",
     marginStart:6

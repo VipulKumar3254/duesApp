@@ -21,7 +21,7 @@ signInWithEmailAndPassword(getAuth(), loginForm.email, loginForm.password)
     setLoading(false)
     navigation.navigate("Home");
   })
-  .catch(error => {
+  .catch(error => {2
     setLoading(false)
 
     if (error.code === 'auth/email-already-in-use') {

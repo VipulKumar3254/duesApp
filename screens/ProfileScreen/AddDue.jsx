@@ -94,6 +94,8 @@ const AddDue = ({ route }) => {
             });
             setShowActivityIndicator(false)
             Alert.alert("Success", "Due Added Successfully");
+            setCapturedPhoto(null)
+            setDueData({})
 
         } catch (error) {
             console.log("Firestore Error:", error);

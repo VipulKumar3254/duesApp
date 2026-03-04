@@ -7,6 +7,8 @@ export const lightTheme = {
   dueColor:"rgba(245, 5, 5, 0.1)",
   creditColor:"rgba(97, 245, 5, 0.1)",
   borderRadius:10,
+  userBorderColor:"#f0eded",
+  userSearchbackground:"#fefefe",
 };
 
 export const darkTheme = {

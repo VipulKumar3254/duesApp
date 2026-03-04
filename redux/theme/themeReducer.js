@@ -10,8 +10,6 @@ const themeSlice = createSlice({
     initialState,
     reducers:{
         changeTheme:(state,action)=>{
-            console.log(action.payload);
-            
             state.theme=action.payload;
         }
     }

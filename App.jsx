@@ -1,7 +1,8 @@
+import Icon from 'react-native-vector-icons/MaterialIcons';
 import { PaperProvider } from 'react-native-paper';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import React, { Component, useEffect, useState } from 'react'
-import { Text, useColorScheme, View } from 'react-native'
+import { Pressable, Text, useColorScheme, View } from 'react-native'
 import { SafeAreaProvider } from 'react-native-safe-area-context'
 import profile from "./screens/Profile";
 import Dues from "./screens/Dues";
@@ -34,7 +35,6 @@ function RootStack() {
   const isDark = colorScheme === "dark"
   if (isDark) {
     color = darkTheme
-    console.log("object")
     dispath(changeTheme(true))
   }
   else {

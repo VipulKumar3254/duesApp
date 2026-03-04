@@ -64,11 +64,8 @@ const AddUser = () => {
 
             if (capturedPhoto) {
                 const fileName = `duesUsers/userPhotos/${Date.now()}.jpg`;
-
                 const reference = storage().ref(fileName);
-
                 await reference.putFile(capturedPhoto.path);
-
                 imageUrl = await reference.getDownloadURL();
             }
             firestore()
@@ -78,20 +75,16 @@ const AddUser = () => {
                     profile: imageUrl,
                 })
                 .then(() => {
-                    console.log('User added!');
                     setShowActivityIndicator(false);
-
                     Alert.alert("User Added");
+                    setUserData({})
+                    setCapturedPhoto(null)
                 }).catch((err) => {
                     setShowActivityIndicator(false);
 
                     Alert.alert("Error while adding User");
                     console.log(err)
                 })
-
-
-
-
         }
         catch (err) {
             console.log(err)

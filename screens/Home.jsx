@@ -1,7 +1,9 @@
-import { PageBody } from "../source/layout/Layout"
+import { getAuth, signOut } from '@react-native-firebase/auth';
+// import { PageBody } from "../source/layout/Layout"
+import { PageBody } from '../source/layout/Layout';
 import { useNavigation } from '@react-navigation/native';
-import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, Pressable, ScrollView, Dimensions } from 'react-native';
+import React, { useEffect, useLayoutEffect, useState } from 'react';
+import { View, Text, StyleSheet, Pressable, ScrollView, Dimensions, Alert } from 'react-native';
 import { Avatar, Button, Card, } from 'react-native-paper';
 import LinearGradient from "react-native-linear-gradient";
 import Icon from 'react-native-vector-icons/MaterialIcons';
@@ -9,7 +11,10 @@ import { useSelector } from 'react-redux';
 import { changeTheme } from '../redux/theme/themeReducer';
 import useTheme from "../hooks/useTheme"
 import functions from "@react-native-firebase/functions";
-import { getAuth, onAuthStateChanged } from "@react-native-firebase/auth";
+import {  onAuthStateChanged } from "@react-native-firebase/auth";
+// import Card1 from "../source/common/molecule/Card"
+import Card1 from "../source/common/molecule/Card"
+import { Menu, Divider } from 'react-native-paper';
 
 
 
@@ -20,17 +25,79 @@ const screenWidth = Dimensions.get("window").width - (gap + padding * 2); // 10 
 
 const Home = () => {
 
+    const [initializing, setInitializing] = useState(true);
+  const [user, setUser] = useState();
+
   const navigation = useNavigation();
   const [cardStats, setCardStats] = useState({});
 
   const color = useTheme();
 
-    const [initializing, setInitializing] = useState(true);
-    const [user, setUser] = useState();
+
+
+    const [visible, setVisible] = useState(false);
+
+  const openMenu = () => setVisible(true);
+  const closeMenu = () => setVisible(false);
+   // Set an initializing state whilst Firebase connects
+
+
+  // Handle user state changes
+  function handleAuthStateChanged(user) {
+    console.log(user)
+  if(!user)
+  {
+    navigation.replace("Login")
+  }
+
+    setUser(user);
+    if (initializing) setInitializing(false);
+  }
+
+  useEffect(() => {
+    const subscriber = onAuthStateChanged(getAuth(), handleAuthStateChanged);
+    return subscriber; // unsubscribe on unmount
+  }, []);
 
 
 
 
+
+    const handleLogout = () => {
+    closeMenu();
+   signOut(getAuth()).then(() => console.log('User signed out!'));
+  };
+
+
+  useLayoutEffect(() => {
+    navigation.setOptions({
+      headerRight: () => (
+
+         <Menu 
+           contentStyle={{
+          backgroundColor: "#fff",
+          borderRadius: 12,
+          paddingVertical: 0,
+        }}
+          visible={visible}
+          onDismiss={closeMenu}
+          anchor={
+            <Pressable
+              onPress={openMenu}
+            >
+              <Icon name="more-vert" size={24} color="#000" />
+            </Pressable>
+          }
+        >
+          <Menu.Item style={{backgroundColor:"white"}}  title="Users" onPress={()=>{navigation.navigate("Users"); closeMenu();}} />
+          <Divider />
+          <Menu.Item style={{backgroundColor:"white"}}  title="Add User" onPress={()=>{navigation.navigate("AddUser"); closeMenu();}} />
+          <Divider />
+          <Menu.Item onPress={handleLogout} title="Logout" />
+        </Menu>
+      ),
+    });
+  }, [navigation, visible]);
 
 
   const handlePress = () => {
@@ -51,75 +118,75 @@ const Home = () => {
   }, [])
 
 
-  
-  
-    // Handle user state changes
-    function handleAuthStateChanged(user) {
-      setUser(user);
-      if (initializing) setInitializing(false);
-    }
-  
-    useEffect(() => {
-      const subscriber = onAuthStateChanged(getAuth(), handleAuthStateChanged);
-      return subscriber; // unsubscribe on unmount
-    }, []);
-  
-    if (initializing) return null;
-  
-    if (!user) {
-      console.log("no user")
-     navigation.replace("Login")
-    }
-
 
   return (
     <PageBody>
 
       <ScrollView style={{ backgroundColor: color.background }}>
-        <View style={styles.Buttonscontainer}>
+        {/* <View style={styles.Buttonscontainer}>
 
-          <Pressable style={styles.button} onPress={handlePress}>
-            <Text style={styles.mainButton}>Users</Text>
+          <View style={{flexDirection:"row"}}>
+
+            <Pressable style={styles.button} onPress={handlePress}>
+              <Text style={styles.mainButton}>Users</Text>
+            </Pressable>
+         
+            <Pressable style={styles.button} onPress={() => navigation.navigate("AddUser")}>
+              <Text style={styles.mainButton}>Add User</Text>
+            </Pressable>
+          </View>
+    
+        </View> */}
+
+        <View style={{ flexDirection: "row", gap: 8, justifyContent: "center", marginTop: 5 }}>
+          <Pressable onPress={() => navigation.navigate("TotalOutStandingAmount")} style={{ width: screenWidth / 2, height: 98 }}>
+
+            <Card1 title={"OutStanding Amount"} count={cardStats.totalOutstanding} subTitle={"All Users dues"} />
           </Pressable>
-          {/* <Pressable style={styles.button} onPress={() => navigation.navigate("Notices")}>
-            <Text style={styles.mainButton}>Notices</Text>
-          </Pressable> */}
-          <Pressable style={styles.button} onPress={() => navigation.navigate("AddUser")}>
-            <Text style={styles.mainButton}>Add User</Text>
+          <Pressable onPress={() => navigation.navigate("TotalOverDueAmount")} style={{ width: screenWidth / 2, height: 98 }}>
+
+            <Card1 title={"Overdue Amount"} count={cardStats.totalOverDueAmount} subTitle={"Amount exceed Dates"} />
           </Pressable>
+
+
+        </View>
+        <View style={{ flexDirection: "row", gap: 8, justifyContent: "center", marginTop: 5 }}>
+             <Pressable style={{ width: screenWidth / 2+40, height: 98 }}>
+
+            <Card1 title={"Month Collection"} count={"982734"} />
+          </Pressable>
+          <Pressable  onPress={() => navigation.navigate("Users")} style={{ width: screenWidth / 2-40, height: 98 }}>
+
+            <Card1 title={"Total Users"} count={cardStats.totalUsers} />
+          </Pressable>
+       
+
+
         </View>
 
         <View style={styles.MainContainer}>
-          <View style={{ marginTop: 5, padding: 5 }}>
+          {/* <View style={{ marginTop: 5, padding: 5 }}>
             <Pressable onPress={() => navigation.navigate("TotalOutStandingAmount")}
               style={[{ backgroundColor: color.background, borderColor: color.borderColor, elevation: 1 }, styles.fullScreenCard,]}
             >
               <Text variant="titleLarge" style={[{ color: color.text }, styles.title]}>Outstanding Amount</Text>
               <Text variant="bodyMedium" style={[styles.count, { fontSize: 50, lineHeight: 70, color: color.text }]}>{cardStats.totalOutstanding}</Text>
-              {/* <View style={styles.searchButton}>
-
-<Icon name="search" size={30} color="black" />;
-</View> */}
+            
 
             </Pressable>
-          </View>
-          <Pressable onPress={() => navigation.navigate("TotalOverDueAmount")} style={{ padding: 5 }}>
+          </View> */}
+          {/* <Pressable onPress={() => navigation.navigate("TotalOverDueAmount")} style={{ padding: 5 }}>
             <View
               style={[{ backgroundColor: color.background, borderColor: color.borderColor }, styles.fullScreenCard,]}
 
             >
               <Text variant="titleLarge" style={[{ color: color.text }, styles.title]}>OverDue Amount</Text>
               <Text variant="bodyMedium" style={[styles.count, { fontSize: 50, lineHeight: 70, color: color.text }]}>{cardStats.totalOverDueAmount}</Text>
-              {/* <View style={styles.searchButton}>
-
-<Icon name="search" size={30} color="black" />;
-</View> */}
-
             </View>
-          </Pressable>
+          </Pressable> */}
 
-          <View style={styles.GradientCardContainer}>
-            <Pressable style={{flex:1}} onPress={() => navigation.navigate("Users")}>
+          {/* <View style={styles.GradientCardContainer}>
+            <Pressable style={{ flex: 1 }} onPress={() => navigation.navigate("Users")}>
 
               <View
                 style={[{ backgroundColor: color.background, borderColor: color.borderColor }, styles.fullScreenCard,]}
@@ -127,13 +194,6 @@ const Home = () => {
               >
                 <Text variant="titleLarge" style={[{ color: color.text }, styles.title]}>Total Users</Text>
                 <Text variant="bodyMedium" style={[styles.count, { lineHeight: 70, color: color.text }]}>{cardStats.totalUsers}</Text>
-                {/* <View style={styles.searchButton}>
-                  <Pressable onPress={() => navigation.navigate("SearchUser")}>
-
-                    <Icon name="search" size={30} color="black" />
-                  </Pressable>
-                </View> */}
-
               </View>
             </Pressable>
 
@@ -144,7 +204,7 @@ const Home = () => {
               <Text variant="bodyMedium" style={[styles.count, { color: color.text }]}>26</Text>
 
             </View>
-          </View>
+          </View> */}
 
 
 
@@ -167,6 +227,7 @@ const styles = StyleSheet.create({
   Buttonscontainer: {
     flex: 1,
     flexDirection: "row",
+    justifyContent: "space-between",
     gap: 10,
 
   },
@@ -223,7 +284,7 @@ const styles = StyleSheet.create({
   },
 
   fullScreenCard: {
-    flex:1,
+    flex: 1,
     padding: 10,
     elevation: 2,
     borderRadius: 10,
@@ -231,8 +292,8 @@ const styles = StyleSheet.create({
   },
   gradientCard: {
     width: screenWidth / 2,
-    padding: 10, 
-       minHeight: 120, 
+    padding: 10,
+    minHeight: 120,
     elevation: 2,
 
   },
@@ -241,7 +302,7 @@ const styles = StyleSheet.create({
   },
 
   count: {
-    letterSpacing:-2,
+    letterSpacing: -2,
     fontWeight: "400",
     fontSize: 50,
     lineHeight: 70
